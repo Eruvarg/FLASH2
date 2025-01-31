@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Révision Japonais - Flashcards</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #1E1E1E;
+            color: white;
+        }
+        .flashcard-container {
+            perspective: 1000px;
+            width: 80%;
+            max-width: 500px;
+            margin: 50px auto;
+        }
+        .flashcard {
+            width: 100%;
+            height: 200px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: transform 0.3s;
+            transform-style: preserve-3d;
+            position: relative;
+        }
+        .flipped {
+            transform: rotateY(180deg);
+        }
+        .flashcard .front, .flashcard .back {
+            color: white;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            backface-visibility: hidden;
+            font-size: 1.5em;
+        }
+        .flashcard .back {
+            transform: rotateY(180deg);
+            font-size: 1.5em;
+        }
+        .flashcard .back p {
+            margin: 2px 0;
+        }
+        .progress {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Révision Japonais - Flashcards</h1>
+    <div class="progress"><span id="progress"></span></div>
+    <div class="flashcard-container" onclick="toggleCard()">
+        <div class="flashcard">
+            <div class="front">
+                <p id="word-fr">Clique pour voir la réponse</p>
+            </div>
+            <div class="back">
+                <p id="word-romaji"></p>
+                <p id="word-hiragana"></p>
+                <p id="word-kanji"></p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const words = [
+          { fr: "Bateau", romaji: "fune", hiragana: "ふね", kanji: "船" },
+{ fr: "Bus", romaji: "basu", hiragana: "ばす", kanji: "バス" },
+{ fr: "Vélo", romaji: "jitensha", hiragana: "じてんしゃ", kanji: "自転車" },
+{ fr: "Train", romaji: "densha", hiragana: "でんしゃ", kanji: "電車" },
+{ fr: "Avion", romaji: "hikouki", hiragana: "ひこうき", kanji: "飛行機" },
+{ fr: "À Pied", romaji: "aruite", hiragana: "あるいて", kanji: "歩いて" },
+{ fr: "Métro", romaji: "chikatetsu", hiragana: "ちかてつ", kanji: "地下鉄" },
+{ fr: "Tram", romaji: "toramu", hiragana: "とらむ", kanji: "トラム" },
+{ fr: "Moto", romaji: "ootobai", hiragana: "おおとばい", kanji: "オートバイ" },
+{ fr: "Taxi", romaji: "takushi", hiragana: "たくしー", kanji: "タクシー" },
+{ fr: "Voiture", romaji: "kuruma", hiragana: "くるま", kanji: "車" },
+{ fr: "Professeur", romaji: "sensei", hiragana: "せんせい", kanji: "先生" },
+{ fr: "Professeur", romaji: "kyoshi", hiragana: "きょうし", kanji: "教師" },
+{ fr: "Étudiant", romaji: "gakusei", hiragana: "がくせい", kanji: "学生" },
+{ fr: "Salarié D’Entreprise", romaji: "kaishain", hiragana: "かいしゃいん", kanji: "会社員" },
+{ fr: "Médecin", romaji: "isha", hiragana: "いしゃ", kanji: "医者" },
+{ fr: "Dentiste", romaji: "haisha", hiragana: "はいしゃ", kanji: "歯医者" },
+{ fr: "Employé·E De Banque", romaji: "ginkouin", hiragana: "ぎんこういん", kanji: "銀行員" },
+{ fr: "Fonctionnaire", romaji: "koumuin", hiragana: "こうむいん", kanji: "公務員" },
+{ fr: "Avocat", romaji: "bengoshi", hiragana: "べんごし", kanji: "弁護士" },
+{ fr: "Femme Au Foyer", romaji: "shufu", hiragana: "しゅふ", kanji: "主婦" },
+{ fr: "Sans Emploi", romaji: "mushoku", hiragana: "むしょく", kanji: "無職" },
+{ fr: "Chercheur", romaji: "kenky?sha", hiragana: "けんきゅうしゃ", kanji: "研究者" },
+{ fr: "Pharmacien", romaji: "yakuzai-shi", hiragana: "やくざいし", kanji: "薬剤師" },
+{ fr: "Ingénieur", romaji: "enjinia", hiragana: "えんじにあ", kanji: "(技術者)" },
+{ fr: "1", romaji: "ichi", hiragana: "いち", kanji: "一" },
+{ fr: "2", romaji: "ni", hiragana: "に", kanji: "二" },
+{ fr: "3", romaji: "san", hiragana: "さん", kanji: "三" },
+{ fr: "4", romaji: "shi / yon", hiragana: "し／よん", kanji: "四" },
+{ fr: "5", romaji: "go", hiragana: "ご", kanji: "五" },
+{ fr: "6", romaji: "roku", hiragana: "ろく", kanji: "六" },
+{ fr: "7", romaji: "shichi / nana", hiragana: "しち／なな", kanji: "七" },
+{ fr: "8", romaji: "hachi", hiragana: "はち", kanji: "八" },
+{ fr: "9", romaji: "kyu / ku", hiragana: "きゅう／く", kanji: "九" },
+{ fr: "10", romaji: "juu", hiragana: "じゅう", kanji: "十" },
+{ fr: "11", romaji: "juu-ichi", hiragana: "じゅういち", kanji: "十一" },
+{ fr: "21", romaji: "ni-juu-ichi", hiragana: "にじゅういち", kanji: "二十一" },
+{ fr: "100", romaji: "hyaku", hiragana: "ひゃく", kanji: "百" },
+{ fr: "200", romaji: "ni-hyaku", hiragana: "にひゃく", kanji: "二百" },
+{ fr: "300", romaji: "san-byaku", hiragana: "さんびゃく", kanji: "三百" },
+{ fr: "400", romaji: "yon-hyaku", hiragana: "よんひゃく", kanji: "四百" },
+{ fr: "500", romaji: "go-hyaku", hiragana: "ごひゃく", kanji: "五百" },
+{ fr: "600", romaji: "roppyaku", hiragana: "ろっぴゃく", kanji: "六百" },
+{ fr: "700", romaji: "nana-hyaku", hiragana: "ななひゃく", kanji: "七百" },
+{ fr: "800", romaji: "happyaku", hiragana: "はっぴゃく", kanji: "八百" },
+{ fr: "900", romaji: "kyu-hyaku", hiragana: "きゅうひゃく", kanji: "九百" },
+{ fr: "1000", romaji: "sen", hiragana: "せん", kanji: "千" },
+{ fr: "2000", romaji: "ni-sen", hiragana: "にせん", kanji: "二千" },
+{ fr: "3.000.", romaji: "san-zen", hiragana: "さんぜん", kanji: "三千" },
+{ fr: "4.000.", romaji: "yon-sen", hiragana: "よんせん", kanji: "四千" },
+{ fr: "5.000.", romaji: "go-sen", hiragana: "ごせん", kanji: "五千" },
+{ fr: "6.000.", romaji: "roku-sen", hiragana: "ろくせん", kanji: "六千" },
+{ fr: "7.000.", romaji: "nana-sen", hiragana: "ななせん", kanji: "七千" },
+{ fr: "8.000.", romaji: "hassen", hiragana: "はっせん", kanji: "八千" },
+{ fr: "9.000.", romaji: "kyuu-sen", hiragana: "きゅうせん", kanji: "九千" },
+{ fr: "10.000.", romaji: "ichi-man", hiragana: "いちまん", kanji: "一万" },
+{ fr: "11.000.", romaji: "ichi-man-sen", hiragana: "いちまんせん", kanji: "一万千" },
+{ fr: "20.000.", romaji: "ni-man", hiragana: "にまん", kanji: "二万" },
+{ fr: "1.000.000", romaji: "juu-man", hiragana: "じゅうまん", kanji: "十万" },
+{ fr: "10.000.000", romaji: "hyaku-man", hiragana: "ひゃくまん", kanji: "百万" },
+{ fr: "100.000.000", romaji: "ichi-oku", hiragana: "いちおく", kanji: "一億" },
+{ fr: "1 Étage", romaji: "ikkai", hiragana: "いっかい", kanji: "一階" },
+{ fr: "2 Étage", romaji: "nikai", hiragana: "にかい", kanji: "二階" },
+{ fr: "3 Étage", romaji: "sankai", hiragana: "さんかい", kanji: "三階" },
+{ fr: "4 Étage", romaji: "yonkai", hiragana: "よんかい", kanji: "四階" },
+{ fr: "5 Étage", romaji: "gokai", hiragana: "ごかい", kanji: "五階" },
+{ fr: "6 Étage", romaji: "rokkai", hiragana: "ろっかい", kanji: "六階" },
+{ fr: "7 Étage", romaji: "nanakai", hiragana: "ななかい", kanji: "七階" },
+{ fr: "8 Étage", romaji: "hakkai", hiragana: "はっかい", kanji: "八階" },
+{ fr: "9 Étage", romaji: "kyuukai", hiragana: "きゅうかい", kanji: "九階" },
+{ fr: "10 Étage", romaji: "jukkai", hiragana: "じゅっかい", kanji: "十階" },
+{ fr: "1 Sous-Sol", romaji: "chika ikkai", hiragana: "ちか いっかい", kanji: "地下一階" },
+{ fr: "2 Sous-Sol", romaji: "chika nikai", hiragana: "ちか にかい", kanji: "地下二階" },
+{ fr: "À Quel Étage ?", romaji: "nan-kai desu ka", hiragana: "なんかい ですか", kanji: "何階ですか" },
+{ fr: "1 An", romaji: "issai", hiragana: "いっさい", kanji: "一歳" },
+{ fr: "2 Ans", romaji: "ni-sai", hiragana: "にさい", kanji: "二歳" },
+{ fr: "3 Ans", romaji: "san-sai", hiragana: "さんさい", kanji: "三歳" },
+{ fr: "4 Ans", romaji: "yon-sai", hiragana: "よんさい", kanji: "四歳" },
+{ fr: "5 Ans", romaji: "go-sai", hiragana: "ごさい", kanji: "五歳" },
+{ fr: "6 Ans", romaji: "roku-sai", hiragana: "ろくさい", kanji: "六歳" },
+{ fr: "7 Ans", romaji: "nana-sai", hiragana: "ななさい", kanji: "七歳" },
+{ fr: "8 Ans", romaji: "hassai", hiragana: "はっさい", kanji: "八歳" },
+{ fr: "9 Ans", romaji: "kyuu-sai", hiragana: "きゅうさい", kanji: "九歳" },
+{ fr: "10 Ans", romaji: "jussai", hiragana: "じゅっさい", kanji: "十歳" },
+{ fr: "Rouge", romaji: "aka", hiragana: "あか", kanji: "赤" },
+{ fr: "Bleu", romaji: "ao", hiragana: "あお", kanji: "青" },
+{ fr: "Noir", romaji: "kuro", hiragana: "くろ", kanji: "黒" },
+{ fr: "Blanc", romaji: "shiro", hiragana: "しろ", kanji: "白" },
+{ fr: "Jaune", romaji: "kiiro", hiragana: "きいろ", kanji: "黄色" },
+{ fr: "Marron", romaji: "chairo", hiragana: "ちゃいろ", kanji: "茶色" },
+{ fr: "Vert", romaji: "midori", hiragana: "みどり", kanji: "緑" },
+{ fr: "Violet", romaji: "murasaki", hiragana: "むらさき", kanji: "紫" },
+{ fr: "Doré", romaji: "kin’iro", hiragana: "きんいろ", kanji: "金色" },
+{ fr: "Argenté", romaji: "gin’iro", hiragana: "ぎんいろ", kanji: "銀色" },
+{ fr: "Rose", romaji: "pinku", hiragana: "ぴんく", kanji: "ピンク" },
+{ fr: "Orange", romaji: "orenji", hiragana: "おれんじ", kanji: "オレンジ" },
+{ fr: "Blanc Pur", romaji: "masshiro", hiragana: "まっしろ", kanji: "真っ白" },
+{ fr: "1H", romaji: "ichi-ji", hiragana: "いちじ", kanji: "一時" },
+{ fr: "2H", romaji: "ni-ji", hiragana: "にじ", kanji: "二時" },
+{ fr: "3H", romaji: "san-ji", hiragana: "さんじ", kanji: "三時" },
+{ fr: "4H", romaji: "yo-ji", hiragana: "よじ", kanji: "四時" },
+{ fr: "5H", romaji: "go-ji", hiragana: "ごじ", kanji: "五時" },
+{ fr: "6H", romaji: "roku-ji", hiragana: "ろくじ", kanji: "六時" },
+{ fr: "7H", romaji: "shichi-ji", hiragana: "しちじ", kanji: "七時" },
+{ fr: "8H", romaji: "hachi-ji", hiragana: "はちじ", kanji: "八時" },
+{ fr: "9H", romaji: "ku-ji", hiragana: "くじ", kanji: "九時" },
+{ fr: "10H", romaji: "juu-ji", hiragana: "じゅうじ", kanji: "十時" },
+{ fr: "11H", romaji: "juu-ichi-ji", hiragana: "じゅういちじ", kanji: "十一時" },
+{ fr: "12H", romaji: "juu-ni-ji", hiragana: "じゅうにじ", kanji: "十二時" },
+{ fr: "Et Demi", romaji: "han", hiragana: "はん", kanji: "半" },
+{ fr: "1 Minute", romaji: "ippun", hiragana: "いっぷん", kanji: "一分" },
+{ fr: "2 Minutes", romaji: "ni-fun", hiragana: "にふん", kanji: "二分" },
+{ fr: "3 Minutes", romaji: "san-pun", hiragana: "さんぷん", kanji: "三分" },
+{ fr: "4 Minutes", romaji: "yon-pun", hiragana: "よんぷん", kanji: "四分" },
+{ fr: "5 Minutes", romaji: "go-fun", hiragana: "ごふん", kanji: "五分" },
+{ fr: "6 Minutes", romaji: "roppun", hiragana: "ろっぷん", kanji: "六分" },
+{ fr: "7 Minutes", romaji: "nana-fun", hiragana: "ななふん", kanji: "七分" },
+{ fr: "8 Minutes", romaji: "happun", hiragana: "はっぷん", kanji: "八分" },
+{ fr: "9 Minutes", romaji: "kyuu-fun", hiragana: "きゅうふん", kanji: "九分" },
+{ fr: "10 Minutes", romaji: "juppun", hiragana: "じゅっぷん", kanji: "十分" },
+{ fr: "Lundi", romaji: "getsu-youbi", hiragana: "げつようび", kanji: "月曜日" },
+{ fr: "Mardi", romaji: "ka-youbi", hiragana: "かようび", kanji: "火曜日" },
+{ fr: "Mercredi", romaji: "sui-youbi", hiragana: "すいようび", kanji: "水曜日" },
+{ fr: "Jeudi", romaji: "moku-youbi", hiragana: "もくようび", kanji: "木曜日" },
+{ fr: "Vendredi", romaji: "kin-youbi", hiragana: "きんようび", kanji: "金曜日" },
+{ fr: "Samedi", romaji: "do-youbi", hiragana: "どようび", kanji: "土曜日" },
+{ fr: "Dimanche", romaji: "nichi-youbi", hiragana: "にちようび", kanji: "日曜日" },
+{ fr: "Le 1", romaji: "tsuitachi", hiragana: "ついたち", kanji: "一日" },
+{ fr: "Le 2", romaji: "futsuka", hiragana: "ふつか", kanji: "二日" },
+{ fr: "Le 3", romaji: "mikka", hiragana: "みっか", kanji: "三日" },
+{ fr: "Le 4", romaji: "yokka", hiragana: "よっか", kanji: "四日" },
+{ fr: "Le 5", romaji: "itsuka", hiragana: "いつか", kanji: "五日" },
+{ fr: "Le 6", romaji: "muika", hiragana: "むいか", kanji: "六日" },
+{ fr: "Le 7", romaji: "nanoka", hiragana: "なのか", kanji: "七日" },
+{ fr: "Le 8", romaji: "youka", hiragana: "ようか", kanji: "八日" },
+{ fr: "Le 9", romaji: "kokonoka", hiragana: "ここのか", kanji: "九日" },
+{ fr: "Le 10", romaji: "tooka", hiragana: "とおか", kanji: "十日" },
+{ fr: "Le 11", romaji: "juu-ichi-nichi", hiragana: "じゅういちにち", kanji: "十一日" },
+{ fr: "Le 19", romaji: "juu-ku-nichi", hiragana: "じゅうくにち", kanji: "十九日" },
+{ fr: "Le 20", romaji: "hatsuka", hiragana: "はつか", kanji: "二十日" },
+{ fr: "Le 24", romaji: "ni-juu-yokka", hiragana: "にじゅうよっか", kanji: "二十四日" },
+{ fr: "Le 29", romaji: "ni-juu-ku-nichi", hiragana: "にじゅうくにち", kanji: "二十九日" },
+{ fr: "Janvier", romaji: "ichi-gatsu", hiragana: "いちがつ", kanji: "一月" },
+{ fr: "Février", romaji: "ni-gatsu", hiragana: "にがつ", kanji: "二月" },
+{ fr: "Mars", romaji: "san-gatsu", hiragana: "さんがつ", kanji: "三月" },
+{ fr: "Avril", romaji: "shi-gatsu", hiragana: "しがつ", kanji: "四月" },
+{ fr: "Mai", romaji: "go-gatsu", hiragana: "ごがつ", kanji: "五月" },
+{ fr: "Juin", romaji: "roku-gatsu", hiragana: "ろくがつ", kanji: "六月" },
+{ fr: "Juillet", romaji: "shichi-gatsu", hiragana: "しちがつ", kanji: "七月" },
+{ fr: "Août", romaji: "hachi-gatsu", hiragana: "はちがつ", kanji: "八月" },
+{ fr: "Septembre", romaji: "ku-gatsu", hiragana: "くがつ", kanji: "九月" },
+{ fr: "Octobre", romaji: "juu-gatsu", hiragana: "じゅうがつ", kanji: "十月" },
+{ fr: "Novembre", romaji: "juu-ichi-gatsu", hiragana: "じゅういちがつ", kanji: "十一月" },
+{ fr: "Décembre", romaji: "juu-ni-gatsu", hiragana: "じゅうにがつ", kanji: "十二月" },
+{ fr: "Maintenant", romaji: "ima", hiragana: "いま", kanji: "今" },
+{ fr: "Aujourd’Hui", romaji: "kyou", hiragana: "きょう", kanji: "今日" },
+{ fr: "Ce Matin", romaji: "kesa", hiragana: "けさ", kanji: "今朝" },
+{ fr: "Ce Soir", romaji: "konban", hiragana: "こんばん", kanji: "今晩" },
+{ fr: "Hier", romaji: "kino", hiragana: "きのう", kanji: "昨日" },
+{ fr: "Avant-Hier", romaji: "ototoi", hiragana: "おととい", kanji: "一昨日" },
+{ fr: "Demain", romaji: "ashita", hiragana: "あした", kanji: "明日" },
+{ fr: "Après-Demain", romaji: "asatte", hiragana: "あさって", kanji: "明後日" },
+{ fr: "Nuit / Soir", romaji: "yoru / ban", hiragana: "よる / ばん", kanji: "夜/晩" },
+{ fr: "L’Année Dernière", romaji: "kyonen", hiragana: "きょねん", kanji: "去年" },
+{ fr: "Cette Année", romaji: "kotoshi", hiragana: "ことし", kanji: "今年" },
+{ fr: "L’Année Prochaine", romaji: "rainen", hiragana: "らいねん", kanji: "来年" },
+{ fr: "Le Mois Dernier", romaji: "sengetsu", hiragana: "せんげつ", kanji: "先月" },
+{ fr: "Ce Mois-Ci", romaji: "kongetsu", hiragana: "こんげつ", kanji: "今月" },
+{ fr: "Le Mois Prochain", romaji: "raigetsu", hiragana: "らいげつ", kanji: "来月" },
+{ fr: "La Semaine Dernière", romaji: "senshuu", hiragana: "せんしゅう", kanji: "先週" },
+{ fr: "Cette Semaine", romaji: "konshuu", hiragana: "こんしゅう", kanji: "今週" },
+{ fr: "La Semaine Prochaine", romaji: "raishuu", hiragana: "らいしゅう", kanji: "来週" },
+{ fr: "Tous Les Jours", romaji: "mainichi", hiragana: "まいにち", kanji: "毎日" },
+{ fr: "Toutes Les Semaines", romaji: "maishuu", hiragana: "まいしゅう", kanji: "毎週" },
+{ fr: "Tous Les Matins", romaji: "mai-asa", hiragana: "まいあさ", kanji: "毎朝" },
+{ fr: "Tous Les Soirs", romaji: "mai-ban", hiragana: "まいばん", kanji: "毎晩" },
+{ fr: "Tous Les Mois", romaji: "mai-tsuki", hiragana: "まいつき", kanji: "毎月" },
+{ fr: "Ma Mère", romaji: "haha", hiragana: "はは", kanji: "母" },
+{ fr: "Mon Père", romaji: "chichi", hiragana: "ちち", kanji: "父" },
+{ fr: "Mon Grand Frère", romaji: "ani", hiragana: "あに", kanji: "兄" },
+{ fr: "Ma Grande Sœur", romaji: "ane", hiragana: "あね", kanji: "姉" },
+{ fr: "Mère (Ext.)", romaji: "okaasan", hiragana: "おかあさん", kanji: "お母さん" },
+{ fr: "Père (Ext.)", romaji: "otousan", hiragana: "おとうさん", kanji: "お父さん" },
+{ fr: "Grand Frère (Ext.)", romaji: "oniisan", hiragana: "おにいさん", kanji: "お兄さん" },
+{ fr: "Grande Sœur (Ext.)", romaji: "oneesan", hiragana: "おねえさん", kanji: "お姉さん" },
+{ fr: "Ma Petite Sœur", romaji: "imouto", hiragana: "いもうと", kanji: "妹" },
+{ fr: "Mon Petit Frère", romaji: "otouto", hiragana: "おとうと", kanji: "弟" },
+{ fr: "Épouse", romaji: "tsuma", hiragana: "つま", kanji: "妻" },
+{ fr: "Époux", romaji: "otto", hiragana: "おっと", kanji: "夫" },
+{ fr: "Mon Mari", romaji: "shujin", hiragana: "しゅじん", kanji: "主人" },
+{ fr: "Mari (Ext.)", romaji: "go-shujin", hiragana: "ごしゅじん", kanji: "ご主人" },
+{ fr: "Femme (Ext.)", romaji: "okusan", hiragana: "おくさん", kanji: "奥さん" },
+{ fr: "Suffixe Masculin", romaji: "kun", hiragana: "くん", kanji: "君" },
+{ fr: "Suffixe", romaji: "chan", hiragana: "ちゃん", kanji: "ちゃん" },
+{ fr: "Je / Moi", romaji: "watashi", hiragana: "わたし", kanji: "私" },
+{ fr: "Tu / Vous", romaji: "anata", hiragana: "あなた", kanji: "貴方" },
+{ fr: "Il / Lui", romaji: "kare", hiragana: "かれ", kanji: "彼" },
+{ fr: "Elle / Elle", romaji: "kanojo", hiragana: "かのじょ", kanji: "彼女" },
+{ fr: "Nous", romaji: "watashi-tachi", hiragana: "わたしたち", kanji: "私たち" },
+{ fr: "Vous", romaji: "anata-tachi", hiragana: "あなたたち", kanji: "あなた達" },
+{ fr: "Ils / Eux", romaji: "karera", hiragana: "かれら", kanji: "彼ら" },
+{ fr: "Elles", romaji: "kanojo-tachi", hiragana: "かのじょたち", kanji: "彼女たち" },
+{ fr: "Tout Le Monde", romaji: "mina-san", hiragana: "みなさん", kanji: "皆さん" },
+{ fr: "Finir", romaji: "owarimasu", hiragana: "おわります", kanji: "終わります" },
+{ fr: "Manger", romaji: "tabemasu", hiragana: "たべます", kanji: "食べます" },
+{ fr: "Nager", romaji: "oyogimasu", hiragana: "およぎます", kanji: "泳ぎます" },
+{ fr: "Commencer", romaji: "hajimemasu", hiragana: "はじめます", kanji: "始めます" },
+{ fr: "Aller", romaji: "ikimasu", hiragana: "いきます", kanji: "行きます" },
+{ fr: "Venir", romaji: "kimasu", hiragana: "きます", kanji: "来ます" },
+{ fr: "Rentrer", romaji: "kaerimasu", hiragana: "かえります", kanji: "帰ります" },
+{ fr: "Voir / Regarder", romaji: "mimasu", hiragana: "みます", kanji: "見ます" },
+{ fr: "Écouter / Entendre", romaji: "kikimasu", hiragana: "ききます", kanji: "聞きます" },
+{ fr: "Parler", romaji: "hanashimasu", hiragana: "はなします", kanji: "話します" },
+{ fr: "Lire", romaji: "yomimasu", hiragana: "よみます", kanji: "読みます" },
+{ fr: "Écrire", romaji: "kakimasu", hiragana: "かきます", kanji: "書きます" },
+{ fr: "Prendre (Une Photo, Etc.)", romaji: "torimasu", hiragana: "とります", kanji: "取ります" },
+{ fr: "Boire", romaji: "nomimasu", hiragana: "のみます", kanji: "飲みます" },
+{ fr: "Travailler", romaji: "hatarakimasu", hiragana: "はたらきます", kanji: "働きます" },
+{ fr: "Étudier", romaji: "benkyou shimasu", hiragana: "べんきょうします", kanji: "勉強します" },
+{ fr: "Se Lever / Se Réveiller", romaji: "okimasu", hiragana: "おきます", kanji: "起きます" },
+{ fr: "Se Reposer", romaji: "yasumimasu", hiragana: "やすみます", kanji: "休みます" },
+{ fr: "Dormir", romaji: "nemasu", hiragana: "ねます", kanji: "寝ます" },
+{ fr: "Faire", romaji: "shimasu", hiragana: "します", kanji: "します" },
+{ fr: "Laver", romaji: "araimasu", hiragana: "あらいます", kanji: "洗います" },
+{ fr: "Couper", romaji: "kirimasu", hiragana: "きります", kanji: "切ります" },
+{ fr: "Pincer / Insérer", romaji: "hasamimasu", hiragana: "はさみます", kanji: "挟みます" },
+{ fr: "Acheter", romaji: "kaimasu", hiragana: "かいます", kanji: "買います" },
+{ fr: "Prêter", romaji: "kashimasu", hiragana: "かします", kanji: "貸します" },
+{ fr: "Emprunter", romaji: "karimasu", hiragana: "かります", kanji: "借ります" },
+{ fr: "Téléphoner", romaji: "denwa o kakemasu", hiragana: "でんわをかけます", kanji: "電話をかけます" },
+{ fr: "Recevoir Un Appel", romaji: "denwa o moraimasu", hiragana: "でんわをもらいます", kanji: "電話をもらいます" },
+{ fr: "Apprendre", romaji: "naraimasu", hiragana: "ならいます", kanji: "習います" },
+{ fr: "Enseigner", romaji: "oshiemasu", hiragana: "おしえます", kanji: "教えます" },
+{ fr: "Donner", romaji: "agemasu", hiragana: "あげます", kanji: "あげます" },
+{ fr: "Recevoir", romaji: "moraimasu", hiragana: "もらいます", kanji: "もらいます" },
+{ fr: "Travailler / Faire Le Travail", romaji: "shigoto o shimasu", hiragana: "しごとをします", kanji: "仕事をします" },
+{ fr: "Envoyer", romaji: "okurimasu", hiragana: "おくります", kanji: "送ります" },
+{ fr: "Inhaler / Fumer", romaji: "suimasu", hiragana: "すいます", kanji: "吸います" },
+{ fr: "Porter (Un Vêtement)", romaji: "kimasu", hiragana: "きます", kanji: "着ます" },
+{ fr: "Vendre", romaji: "urimasu", hiragana: "うります", kanji: "売ります" },
+{ fr: "Griller / Cuire", romaji: "yakimasu", hiragana: "やきます", kanji: "焼きます" },
+{ fr: "Monter (Dans Un Véhicule)", romaji: "norimasu", hiragana: "のります", kanji: "乗ります" },
+{ fr: "Rencontrer, Voir Qqn", romaji: "aimasu", hiragana: "あいます", kanji: "会います" },
+{ fr: "Ici (Proche Du Locuteur)", romaji: "koko", hiragana: "ここ", kanji: "ここ" },
+{ fr: "Là (Proche De L’Interlocuteur)", romaji: "soko", hiragana: "そこ", kanji: "そこ" },
+{ fr: "Là-Bas (Loin Des Deux)", romaji: "asoko", hiragana: "あそこ", kanji: "あそこ" },
+{ fr: "Où", romaji: "doko", hiragana: "どこ", kanji: "どこ" },
+{ fr: "Par Ici / Cette Direction", romaji: "kochira", hiragana: "こちら", kanji: "こちら" },
+{ fr: "Par Là / Cette Direction-Là", romaji: "sochira", hiragana: "そちら", kanji: "そちら" },
+{ fr: "Par Là-Bas", romaji: "achira", hiragana: "あちら", kanji: "あちら" },
+{ fr: "Où / Quelle Direction", romaji: "dochira", hiragana: "どちら", kanji: "どちら" },
+{ fr: "Ceci", romaji: "kore", hiragana: "これ", kanji: "これ" },
+{ fr: "Cela (Près De Toi)", romaji: "sore", hiragana: "それ", kanji: "それ" },
+{ fr: "Cela (Là-Bas)", romaji: "are", hiragana: "あれ", kanji: "あれ" },
+{ fr: "Lequel ?", romaji: "dore", hiragana: "どれ", kanji: "どれ" },
+{ fr: "Ce Stylo-Ci", romaji: "kono pen", hiragana: "この ペン", kanji: "このペン" },
+{ fr: "Ce Stylo-Là (Près De Toi)", romaji: "sono pen", hiragana: "その ペン", kanji: "そのペン" },
+{ fr: "Ce Stylo Là-Bas", romaji: "ano pen", hiragana: "あの ペン", kanji: "あのペン" },
+{ fr: "Quel Stylo ?", romaji: "dono pen", hiragana: "どの ペン", kanji: "どのペン" },
+{ fr: "Détesté / Ne Pas Aimer", romaji: "kirai", hiragana: "きらい", kanji: "嫌い" },
+{ fr: "Effrayant", romaji: "kowai", hiragana: "こわい", kanji: "怖い" },
+{ fr: "Douloureux", romaji: "itai", hiragana: "いたい", kanji: "痛い" },
+{ fr: "Habile, Doué", romaji: "jouzu", hiragana: "じょうず", kanji: "上手" },
+{ fr: "Maladroit, Pas Doué", romaji: "heta", hiragana: "へた", kanji: "下手" },
+{ fr: "Nécessaire", romaji: "hitsuyou", hiragana: "ひつよう", kanji: "必要" },
+{ fr: "Gentil / Facile", romaji: "yasashii (i ou na)", hiragana: "やさしい", kanji: "優しい" },
+{ fr: "Méchant / Malveillant", romaji: "ijiwaru", hiragana: "いじわる", kanji: "意地悪" },
+{ fr: "Simple", romaji: "kantan", hiragana: "かんたん", kanji: "簡単" },
+{ fr: "Difficile", romaji: "muzukashii", hiragana: "むずかしい", kanji: "難しい" },
+{ fr: "Délicieux", romaji: "oishii", hiragana: "おいしい", kanji: "美味しい" },
+{ fr: "Cher / Haut", romaji: "takai", hiragana: "たかい", kanji: "高い" },
+{ fr: "Amusant", romaji: "tanoshii", hiragana: "たのしい", kanji: "楽しい" },
+{ fr: "Mignon", romaji: "kawaii", hiragana: "かわいい", kanji: "可愛い" },
+{ fr: "Intéressant / Drôle", romaji: "omoshiroi", hiragana: "おもしろい", kanji: "面白い" },
+{ fr: "Occupé", romaji: "isogashii", hiragana: "いそがしい", kanji: "忙しい" },
+{ fr: "Libre / Inoccupé", romaji: "hima", hiragana: "ひま", kanji: "暇" },
+{ fr: "Mauvais (Goût)", romaji: "mazui", hiragana: "まずい", kanji: "不味い" },
+{ fr: "Bas", romaji: "hikui", hiragana: "ひくい", kanji: "低い" },
+{ fr: "Vieux, Ancien", romaji: "furui", hiragana: "ふるい", kanji: "古い" },
+{ fr: "Nouveau, Neuf", romaji: "atarashii", hiragana: "あたらしい", kanji: "新しい" },
+{ fr: "Bon Marché", romaji: "yasui", hiragana: "やすい", kanji: "安い" },
+{ fr: "Chaud (Temps / Objet)", romaji: "atsui", hiragana: "あつい", kanji: "暑い/熱い" },
+{ fr: "Froid (Temps)", romaji: "samui", hiragana: "さむい", kanji: "寒い" },
+{ fr: "Froid (Au Toucher)", romaji: "tsumetai", hiragana: "つめたい", kanji: "冷たい" },
+{ fr: "Ravissant, Chouette", romaji: "suteki", hiragana: "すてき", kanji: "素敵" },
+{ fr: "Célèbre", romaji: "yuumei", hiragana: "ゆうめい", kanji: "有名" },
+{ fr: "Beau, Propre", romaji: "kirei", hiragana: "きれい", kanji: "きれい" },
+{ fr: "Laid", romaji: "minikui", hiragana: "みにくい", kanji: "醜い" },
+{ fr: "Sale", romaji: "kitanai", hiragana: "きたない", kanji: "汚い" },
+{ fr: "Animé, Bruyant (Positif)", romaji: "nigiyaka", hiragana: "にぎやか", kanji: "賑やか" },
+{ fr: "Bruyant, Agaçant", romaji: "urusai", hiragana: "うるさい", kanji: "煩い" },
+{ fr: "Calme, Silencieux", romaji: "shizuka", hiragana: "しずか", kanji: "静か" },
+{ fr: "Gentil, Aimable", romaji: "shinsetsu", hiragana: "しんせつ", kanji: "親切" },
+{ fr: "Pratique", romaji: "benri", hiragana: "べんり", kanji: "便利" },
+{ fr: "Peu Pratique", romaji: "fuben", hiragana: "ふべん", kanji: "不便" },
+{ fr: "Grand", romaji: "ookii", hiragana: "おおきい", kanji: "大きい" },
+{ fr: "Petit", romaji: "chiisai", hiragana: "ちいさい", kanji: "小さい" },
+{ fr: "Épais", romaji: "atsui", hiragana: "あつい", kanji: "厚い" },
+{ fr: "Fin / Léger (Goût)", romaji: "usui", hiragana: "うすい", kanji: "薄い" },
+{ fr: "Spacieux, Large", romaji: "hiroi", hiragana: "ひろい", kanji: "広い" },
+{ fr: "Étroit", romaji: "semai", hiragana: "せまい", kanji: "狭い" },
+{ fr: "Long", romaji: "nagai", hiragana: "ながい", kanji: "長い" },
+{ fr: "Court", romaji: "mijikai", hiragana: "みじかい", kanji: "短い" },
+{ fr: "Fort", romaji: "tsuyoi", hiragana: "つよい", kanji: "強い" },
+{ fr: "Tôt / Rapide", romaji: "hayai", hiragana: "はやい", kanji: "早い/速い" },
+{ fr: "Zéro (0)", romaji: "rei", hiragana: "れい", kanji: "零" },
+{ fr: "Personne", romaji: "hito", hiragana: "ひと", kanji: "人" },
+{ fr: "Quoi ?", romaji: "nani", hiragana: "なに", kanji: "何" },
+{ fr: "Qui ?", romaji: "dare", hiragana: "だれ", kanji: "誰" },
+{ fr: "Qui ? (Plus Poli)", romaji: "donata", hiragana: "どなた", kanji: "どなた" },
+{ fr: "Être (Copule)", romaji: "desu", hiragana: "です", kanji: "です" },
+{ fr: "Non", romaji: "iie", hiragana: "いいえ", kanji: "いいえ" },
+{ fr: "Qu’Est-Ce Que C’Est ?", romaji: "nan desu ka", hiragana: "なん ですか", kanji: "何ですか" },
+{ fr: "Comment Ça Va ?", romaji: "o-genki desu ka", hiragana: "お げんき ですか", kanji: "お元気ですか" },
+{ fr: "Oui, Je Vais Bien", romaji: "hai, genki desu", hiragana: "はい げんき です", kanji: "はい元気です" },
+{ fr: "Japonais(E)", romaji: "nihon-jin", hiragana: "にほんじん", kanji: "日本人" },
+{ fr: "Anglais(E)", romaji: "igirisu-jin", hiragana: "いぎりすじん", kanji: "イギリス人" },
+{ fr: "Allemand(E)", romaji: "doitsu-jin", hiragana: "どいつじん", kanji: "ドイツ人" },
+{ fr: "Français(E)", romaji: "furansu-jin", hiragana: "ふらんすじん", kanji: "フランス人" },
+{ fr: "Thaïlandais(E)", romaji: "tai-jin", hiragana: "たいじん", kanji: "タイ人" },
+{ fr: "Langue Japonaise", romaji: "nihongo", hiragana: "にほんご", kanji: "日本語" },
+{ fr: "Corée Du Sud", romaji: "kankoku", hiragana: "かんこく", kanji: "韓国" },
+{ fr: "Collège (Ou Chine Si C’Est ?? ?)", romaji: "chuugaku", hiragana: "ちゅうがく", kanji: "中学" },
+{ fr: "Sushi", romaji: "sushi", hiragana: "すし", kanji: "寿司" },
+{ fr: "Sauce", romaji: "sosu", hiragana: "そーす", kanji: "ソース" },
+{ fr: "Entreprise", romaji: "kaisha", hiragana: "かいしゃ", kanji: "会社" },
+{ fr: "Maison, Chez Soi", romaji: "ie / uchi", hiragana: "いえ / うち", kanji: "家 / 家" },
+{ fr: "Au-Dessus, Sur", romaji: "ue", hiragana: "うえ", kanji: "上" },
+{ fr: "En Dessous, Sous", romaji: "shita", hiragana: "した", kanji: "下" },
+{ fr: "Hôpital", romaji: "byouin", hiragana: "びょういん", kanji: "病院" },
+{ fr: "Lapin", romaji: "usagi", hiragana: "うさぎ", kanji: "兎" },
+{ fr: "Éléphant", romaji: "zou", hiragana: "ぞう", kanji: "象" },
+{ fr: "Client / Invité", romaji: "kyaku", hiragana: "きゃく", kanji: "客" },
+{ fr: "Chien", romaji: "inu", hiragana: "いぬ", kanji: "犬" },
+{ fr: "Chat", romaji: "neko", hiragana: "ねこ", kanji: "猫" },
+{ fr: "Viande", romaji: "niku", hiragana: "にく", kanji: "肉" },
+{ fr: "Aubergine", romaji: "nasu", hiragana: "なす", kanji: "茄子" },
+{ fr: "Champignon", romaji: "kinoko", hiragana: "きのこ", kanji: "キノコ" },
+{ fr: "Réception (Accueil)", romaji: "uketsuke", hiragana: "うけつけ", kanji: "受付" },
+{ fr: "Bureau (Service)", romaji: "jimusho", hiragana: "じむしょ", kanji: "事務所" },
+{ fr: "Cantine, Restaurant", romaji: "shokudo", hiragana: "しょくどう", kanji: "食堂" },
+{ fr: "Réunion, Conférence", romaji: "kaigi", hiragana: "かいぎ", kanji: "会議" },
+{ fr: "Salle D’Hôpital", romaji: "byoin-shitsu", hiragana: "びょういんしつ", kanji: "病院室" },
+{ fr: "Photocopieuse", romaji: "kopu-ki", hiragana: "こぴーき", kanji: "コピー機" },
+{ fr: "Porte", romaji: "doa", hiragana: "どあ", kanji: "ドア" },
+{ fr: "Salle De Classe", romaji: "kyoshitsu", hiragana: "きょうしつ", kanji: "教室" },
+{ fr: "Sous-Sol", romaji: "chika", hiragana: "ちか", kanji: "地下" },
+{ fr: "Téléphone", romaji: "denwa", hiragana: "でんわ", kanji: "電話" },
+{ fr: "Chambre, Pièce", romaji: "heya", hiragana: "へや", kanji: "部屋" },
+{ fr: "Escalier", romaji: "kaidan", hiragana: "かいだん", kanji: "階段" },
+{ fr: "Escalator", romaji: "esukareta", hiragana: "えすかれーたー", kanji: "エスカレーター" },
+{ fr: "Parc", romaji: "kouen", hiragana: "こうえん", kanji: "公園" },
+{ fr: "Bureau de poste", romaji: "yubinkyoku", hiragana: "ゆうびんきょく", kanji: "郵便局" },
+{ fr: "Courrier", romaji: "yubin", hiragana: "ゆうびん", kanji: "郵便" },
+{ fr: "Rayon (magasin)", romaji: "uriba", hiragana: "うりば", kanji: "売り場" },
+{ fr: "Station, arrêt (transport)", romaji: "noriba", hiragana: "のりば", kanji: "乗り場" },
+{ fr: "À côté", romaji: "tonari", hiragana: "となり", kanji: "隣" },
+{ fr: "Proche", romaji: "chikaku", hiragana: "ちかく", kanji: "近く" },
+{ fr: "Entre", romaji: "aida", hiragana: "あいだ", kanji: "間" },
+{ fr: "Bureau, table", romaji: "tsukue", hiragana: "つくえ", kanji: "机" },
+{ fr: "Boîte", romaji: "hako", hiragana: "はこ", kanji: "箱" },
+{ fr: "Bagage, colis", romaji: "nimotsu", hiragana: "にもつ", kanji: "荷物" },
+{ fr: "Étagère", romaji: "tana", hiragana: "たな", kanji: "棚" },
+{ fr: "Meuble", romaji: "kagu", hiragana: "かぐ", kanji: "家具" },
+{ fr: "Jardin", romaji: "niwa", hiragana: "にわ", kanji: "庭" },
+{ fr: "Proche", romaji: "chikai", hiragana: "ちかい", kanji: "近い" },
+{ fr: "Loin", romaji: "tooi", hiragana: "とおい", kanji: "遠い" },
+{ fr: "À côté", romaji: "tonari", hiragana: "となり", kanji: "隣" },
+{ fr: "Au-dessus, sur", romaji: "ue", hiragana: "うえ", kanji: "上" },
+{ fr: "Gauche", romaji: "hidari", hiragana: "ひだり", kanji: "左" },
+{ fr: "Droite", romaji: "migi", hiragana: "みぎ", kanji: "右" },
+{ fr: "En dessous, sous", romaji: "shita", hiragana: "した", kanji: "下" },
+{ fr: "Dedans, à l’intérieur", romaji: "naka", hiragana: "なか", kanji: "中" },
+{ fr: "Dehors", romaji: "soto", hiragana: "そと", kanji: "外" },
+{ fr: "Derrière", romaji: "ushiro", hiragana: "うしろ", kanji: "後ろ" },
+{ fr: "Devant", romaji: "mae", hiragana: "まえ", kanji: "前" },
+{ fr: "Banc", romaji: "benchi", hiragana: "ベンチ", kanji: "ベンチ" },
+{ fr: "Tulipe", romaji: "tulipe", hiragana: "チューリップ", kanji: "チューリップ" },
+{ fr: "Personne", romaji: "hito", hiragana: "ひと", kanji: "人" },
+{ fr: "Cette fois, la prochaine fois", romaji: "kondo", hiragana: "こんど", kanji: "今度" },
+{ fr: "Encore, de nouveau", romaji: "mata", hiragana: "また", kanji: "また" },
+{ fr: "Porte", romaji: "doa", hiragana: "ドア", kanji: "ドア" },
+{ fr: "Interrupteur", romaji: "suitchi", hiragana: "スイッチ", kanji: "スイッチ" },
+{ fr: "Courses, achats", romaji: "kaimono", hiragana: "かいもの", kanji: "買い物" },
+{ fr: "Chaise", romaji: "isu", hiragana: "いす", kanji: "椅子" },
+{ fr: "Magasin", romaji: "mise", hiragana: "みせ", kanji: "店" },
+{ fr: "Réfrigérateur", romaji: "reizoko", hiragana: "れいぞうこ", kanji: "冷蔵庫" },
+{ fr: "Il y en a beaucoup", romaji: "ooii desu", hiragana: "おおいです", kanji: "多いです" },
+{ fr: "Il y en a peu", romaji: "sukunai desu", hiragana: "すくないです", kanji: "少ないです" },
+{ fr: "Promesse, engagement", romaji: "yakusoku", hiragana: "やくそく", kanji: "約束" },
+{ fr: "Occupation, affaire à régler", romaji: "youji", hiragana: "ようじ", kanji: "用事" },
+{ fr: "Temps, heure", romaji: "jikan", hiragana: "じかん", kanji: "時間" },
+{ fr: "Femme (épouse)", romaji: "tsuma", hiragana: "つま", kanji: "妻" },
+{ fr: "Femme (épouse, humble)", romaji: "kanai", hiragana: "かない", kanji: "家内" },
+{ fr: "Épouse (terme poli)", romaji: "okusan", hiragana: "おくさん", kanji: "奥さん" },
+{ fr: "Mari", romaji: "otto", hiragana: "おっと", kanji: "夫" },
+{ fr: "Mari (terme humble)", romaji: "shujin", hiragana: "しゅじん", kanji: "主人" },
+{ fr: "Mari (terme poli)", romaji: "goshujin", hiragana: "ごしゅじん", kanji: "ご主人" },
+{ fr: "Travail à temps partiel", romaji: "arubaito", hiragana: "アルバイト", kanji: "アルバイト" },
+{ fr: "Librairie", romaji: "honya", hiragana: "ほんや", kanji: "本屋" },
+{ fr: "Poissonnerie", romaji: "sakanaya", hiragana: "さかなや", kanji: "魚屋" },
+{ fr: "Boucherie", romaji: "nikuya", hiragana: "にくや", kanji: "肉屋" },
+{ fr: "Boulangerie", romaji: "panya", hiragana: "ぱんや", kanji: "パン屋" },
+{ fr: "Fleuriste", romaji: "hanaya", hiragana: "はなや", kanji: "花屋" },
+        ];
+        
+        let currentIndex = 0;
+        let flipped = false;
+        
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+        
+        function updateProgress() {
+            document.getElementById("progress").textContent = `Carte ${currentIndex + 1} / ${words.length}`;
+        }
+        
+        function displayWord(index) {
+            let word = words[index];
+            document.getElementById("word-fr").textContent = word.fr;
+            document.getElementById("word-romaji").textContent = word.romaji;
+            document.getElementById("word-hiragana").textContent = word.hiragana;
+            document.getElementById("word-kanji").textContent = word.kanji;
+            updateProgress();
+        }
+        
+        function toggleCard() {
+            let card = document.querySelector(".flashcard");
+            card.classList.toggle("flipped");
+            flipped = !flipped;
+            
+            if (!flipped) {
+                setTimeout(() => {
+                    currentIndex = (currentIndex + 1) % words.length;
+                    displayWord(currentIndex);
+                }, 300);
+            }
+        }
+        
+        shuffleArray(words);
+        displayWord(currentIndex);
+    </script>
+</body>
+</html>
